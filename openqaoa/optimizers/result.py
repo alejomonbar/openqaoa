@@ -20,7 +20,7 @@ import numpy as np
 
 from .logger_vqa import Logger
 from ..qaoa_parameters.operators import Hamiltonian
-from ..utilities import qaoa_probabilities, bitstring_energy
+from ..utilities import qaoa_probabilities, bitstring_energy, energy_spectrum_hamiltonian
 
 
 def most_probable_bitstring(cost_hamiltonian, measurement_outcomes):
@@ -176,19 +176,20 @@ class Result:
         if isinstance(self.optimized["optimized measurement outcomes"], dict):
             measurement_outcomes = self.optimized["optimized measurement outcomes"]
             solution_bitstring = list(measurement_outcomes.keys())
+            energies = [
+                bitstring_energy(self.cost_hamiltonian, bitstring)
+                for bitstring in solution_bitstring
+            ]
         elif isinstance(self.optimized["optimized measurement outcomes"], np.ndarray):
             measurement_outcomes = self.get_counts(
                 self.optimized["optimized measurement outcomes"]
             )
             solution_bitstring = list(measurement_outcomes.keys())
+            energies = energy_spectrum_hamiltonian(self.cost_hamiltonian)
         else:
             raise TypeError(
                 f"The measurement outcome {type(self.optimized['optimized measurement outcomes'])} is not valid."
             )
-        energies = [
-            bitstring_energy(self.cost_hamiltonian, bitstring)
-            for bitstring in solution_bitstring
-        ]
         args_sorted = np.argsort(energies)
         if n_bitstrings > len(energies):
             n_bitstrings = len(energies)
