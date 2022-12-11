@@ -21,6 +21,8 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -39,7 +41,7 @@ jobs:
         if: ${{ matrix.os=='ubuntu-latest' }} 
         run: |
           find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so /usr/lib/x86_64-linux-gnu/libffi.so.6
           wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
           tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
           cd forest-sdk-2.23.0-linux-deb/
@@ -70,6 +72,8 @@ jobs:
     steps:
       - name: Check out openqaoa
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
@@ -83,7 +87,7 @@ jobs:
       - name: Install qvm
         run: |
           find /usr/lib -name "libffi.so*"
-          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so.7 /usr/lib/x86_64-linux-gnu/libffi.so.6
+          sudo ln -s /usr/lib/x86_64-linux-gnu/libffi.so /usr/lib/x86_64-linux-gnu/libffi.so.6
           wget -q https://downloads.rigetti.com/qcs-sdk/forest-sdk-2.23.0-linux-deb.tar.bz2
           tar -xf forest-sdk-2.23.0-linux-deb.tar.bz2
           cd forest-sdk-2.23.0-linux-deb/
