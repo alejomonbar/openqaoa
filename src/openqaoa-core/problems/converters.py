@@ -11,8 +11,8 @@ class FromDocplex2IsingModel(object):
         self,
         model,
         multipliers: Union[float, list] = None,
-        unbalanced_const: bool = False,
-        strength_ineq: list = [0.1, 0.5],
+        method: str = "slack",
+        strength_ineq: Union[float,list] = 1.0,
     ):
         """
         Creates an instance to translate Docplex models to its Ising Model representation
@@ -25,9 +25,10 @@ class FromDocplex2IsingModel(object):
             a binary representation.
         multipliters: [float, integer, list]
             The strength of the penalties of the cost function
-        heuristic: bool
-            If the method for the inequality constraints is used. This method
-            implement a novel approach that do not required slack variables.
+        method: ["slack", "unbalanced", "unbalanced-fix-1", "unbalanced-fix-2"]
+            If the problem contains inequality constraints. Method
+            implement the slack variables encoding or novel approach that do not 
+            required slack variables called unbalanced penalization.
         strength_ineq: List[float, float]
             Lagrange multipliers of the penalization term using the unbalanced
             penalization method.
@@ -50,7 +51,7 @@ class FromDocplex2IsingModel(object):
             if x.vartype.short_name != "binary":
                 TypeError(f"Variable {x.vartype.short_name} is not allowed.")
         # if unbalanced constraint  approach
-        self.unbalanced = unbalanced_const
+        self.method = method
         self.strength_ineq = strength_ineq
         # get doclex qubo and ising model
         self.qubo_docplex, self.ising_model = self.get_models(multipliers)
@@ -230,15 +231,22 @@ class FromDocplex2IsingModel(object):
 
         """
         if constraint.sense_string == "LE":  # Less or equal inequality constraint
-            new_exp = constraint.get_right_expr() + -1 * constraint.get_left_expr()
+            wmax = constraint.get_right_expr()
+            hx = wmax + -1 * constraint.get_left_expr()
         elif constraint.sense_string == "GE":  # Great or equal inequality constriant
-            new_exp = constraint.get_left_expr() + -1 * constraint.get_right_expr()
+            wmax = constraint.get_left_expr()
+            hx = wmax + -1 * constraint.get_right_expr()
         else:
             raise AttributeError(
                 f"It is not possible to implement constraint {constraint.sense_string}."
             )
         strength = self.strength_ineq
-        penalty = -strength[0] * new_exp + strength[1] * new_exp**2
+        if self.method == "unbalanced":
+            penalty = -strength[0] * hx + strength[1] * hx**2
+        elif self.method == "unbalanced-fix-1":
+            penalty = strength[0] * (1/wmax.constant)**2 * hx * (hx + -2 * wmax)
+        elif self.method == "unbalanced-fix-2":
+            penalty = strength[0] * (2/wmax.constant)**2 * hx * (hx + -1 * wmax)
         return penalty
 
     def multipliers_generators(self):
@@ -302,13 +310,13 @@ class FromDocplex2IsingModel(object):
                 "GE",
             ]:  # Inequality constraint added as a penalty with additional slack variables.
                 constraint.name = f"C{cn}"
-                if self.unbalanced:
-                    penalty = self.inequality_to_unbalanced_penalty(constraint)
-                else:
+                if self.method == "slack":
                     ineq2eq = self.inequality_to_equality(constraint)
                     penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
-            else:
-                raise TypeError("This is not a valid constraint.")
+                elif self.method in ["unbalanced", "unbalanced-fix-1", "unbalanced-fix-2"]:
+                    penalty = self.inequality_to_unbalanced_penalty(constraint)
+                else:
+                    raise TypeError("This is not a valid constraint.")
 
             self.linear_expr(penalty)
             self.quadratic_expr(penalty)

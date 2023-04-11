@@ -56,7 +56,7 @@ class VRP(Problem):
         self.depot = depot
         self.subtours = subtours
         self.method = method
-        if method == "unbalanced" and len(penalty) != 3:
+        if method == "unbalanced" and len(penalty) < 2:
             raise ValueError("The penalty must have 3 parameters [lambda_0, lambda_1, lambda_2]")
         else:
             self.penalty = penalty
@@ -112,6 +112,8 @@ class VRP(Problem):
             penalty = kwargs.get("penalty", 4)
         elif method == "unbalanced":
             penalty = kwargs.get("penalty", [4, 1, 1])
+        elif method in ["unbalanced-fix-1", "unbalanced-fix-2"]:
+            penalty = kwargs.get("penalty", [1, 1])
         else:
             raise ValueError(f"The method '{method}' is not valid.")
         subtours = kwargs.get("subtours",[])
@@ -171,8 +173,8 @@ class VRP(Problem):
         cplex_model = self.docplex_model
         if self.method == "slack":
             qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty).ising_model
-        elif self.method == "unbalanced":
-            qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty[0], unbalanced_const=True, strength_ineq=self.penalty[1:]).ising_model
+        elif self.method in ["unbalanced", "unbalanced-fix-1", "unbalanced-fix-2"]:
+            qubo_docplex = FromDocplex2IsingModel(cplex_model,multipliers=self.penalty[0], method=self.method, strength_ineq=self.penalty[1:]).ising_model
         return QUBO(qubo_docplex.n, qubo_docplex.terms + [[]], qubo_docplex.weights + [qubo_docplex.constant], self.problem_instance)
 
     def classical_solution(self, string: bool = False):
@@ -291,8 +293,8 @@ class VRP(Problem):
 
         colors = colormaps["jet"]
         if isinstance(solution, str):
-            sol = self.solution.copy()
-            for n, var in enumerate(self.docplex_model().iter_binary_vars()):
+            sol = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
                 sol[var.name] = int(solution[n])
             solution = sol
         paths_and_subtours = self.paths_subtours(solution)
