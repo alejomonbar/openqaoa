@@ -1,14 +1,5 @@
-import networkx as nx
-import inspect
-
-from .problem import Problem
-from .knapsack import Knapsack, SlackFreeKnapsack
-from .maximumcut import MaximumCut
-from .minimumvertexcover import MinimumVertexCover
-from .numberpartition import NumberPartition
-from .shortestpath import ShortestPath
-from .tsp import TSP
 from .vehiclerouting import VRP
+from .maximalindependentset import MIS
 from .binpacking import BinPacking
 from .qubo import QUBO
 
@@ -43,8 +34,8 @@ def create_problem_from_dict(problem_instance: dict) -> Problem:
         "shortest_path": ShortestPath,
         "vehicle_routing": VRP,
         "bin_packing": BinPacking,
-        }
-
+        "maximal_independent_set": MIS,
+    }
     # check if the problem type is in the mapper
     assert (
         problem_instance["problem_type"] in problem_mapper
