@@ -244,9 +244,9 @@ class FromDocplex2IsingModel(object):
         if self.method == "unbalanced":
             penalty = -strength[0] * hx + strength[1] * hx**2
         elif self.method == "unbalanced-fix-1":
-            penalty = strength[0] * (1/wmax.constant)**2 * hx * (hx + -2 * wmax)
+            penalty = strength[0] * hx * (hx + -2 * wmax)
         elif self.method == "unbalanced-fix-2":
-            penalty = strength[0] * (2/wmax.constant)**2 * hx * (hx + -1 * wmax)
+            penalty = strength[0] * hx * (hx + -1 * wmax)
         return penalty
 
     def multipliers_generators(self):
