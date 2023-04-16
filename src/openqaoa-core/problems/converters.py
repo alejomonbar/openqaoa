@@ -54,7 +54,7 @@ class FromDocplex2IsingModel(object):
         self.method = method
         self.strength_ineq = strength_ineq
         # get doclex qubo and ising model
-        self.qubo_docplex, self.ising_model = self.get_models(multipliers)
+        self.qubo_docplex, self.ising_model, self.qubo = self.get_models(multipliers)
 
     def linear_expr(self, expr):
         """
@@ -243,10 +243,8 @@ class FromDocplex2IsingModel(object):
         strength = self.strength_ineq
         if self.method == "unbalanced":
             penalty = -strength[0] * hx + strength[1] * hx**2
-        elif self.method == "unbalanced-fix-1":
-            penalty = strength[0] * hx * (hx + -2 * wmax)
-        elif self.method == "unbalanced-fix-2":
-            penalty = strength[0] * hx * (hx + -1 * wmax)
+        elif self.method == "unbalanced-1":
+            penalty = strength[0] * hx * (hx - 2 * wmax.constant * strength[1])
         return penalty
 
     def multipliers_generators(self):
@@ -313,7 +311,7 @@ class FromDocplex2IsingModel(object):
                 if self.method == "slack":
                     ineq2eq = self.inequality_to_equality(constraint)
                     penalty = self.equality_to_penalty(ineq2eq, multipliers[cn])
-                elif self.method in ["unbalanced", "unbalanced-fix-1", "unbalanced-fix-2"]:
+                elif self.method in ["unbalanced", "unbalanced-1"]:
                     penalty = self.inequality_to_unbalanced_penalty(constraint)
                 else:
                     raise TypeError("This is not a valid constraint.")
@@ -436,5 +434,5 @@ class FromDocplex2IsingModel(object):
         qubo_docplex.minimize(self.objective_qubo)
         # Ising Hamiltonian of the QUBO
         ising_model = self.qubo_to_ising(n_variables, terms, weights)
-
-        return qubo_docplex, ising_model
+        qubo = QUBO(n_variables, terms, weights)
+        return qubo_docplex, ising_model, qubo
