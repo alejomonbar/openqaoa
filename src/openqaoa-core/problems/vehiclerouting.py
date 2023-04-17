@@ -207,9 +207,9 @@ class VRP(Problem):
             solution = {}
         for var in cplex_model.iter_binary_vars():
             if string:
-                solution += str(int(round(docplex_sol.get_value(var), 1)))
+                solution += str(round(docplex_sol.get_value(var)))
             else:
-                solution[var.name] = int(round(docplex_sol.get_value(var), 1))
+                solution[var.name] = round(docplex_sol.get_value(var))
         return solution
 
     def paths_subtours(self, sol):
@@ -232,7 +232,7 @@ class VRP(Problem):
         vars_list = []
         for i in range(n_nodes-1):
             for j in range(i+1, n_nodes):
-                if int(sol[f"x_{i}_{j}"]):
+                if round(sol[f"x_{i}_{j}"]):
                     vars_list.append([i,j])
         # ----------------  vehicle routing problem solutions -----------------
         paths = {}
@@ -295,7 +295,7 @@ class VRP(Problem):
         if isinstance(solution, str):
             sol = {}
             for n, var in enumerate(self.docplex_model.iter_binary_vars()):
-                sol[var.name] = int(solution[n])
+                sol[var.name] = round(solution[n])
             solution = sol
         paths_and_subtours = self.paths_subtours(solution)
         paths = paths_and_subtours["paths"]
