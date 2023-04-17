@@ -381,7 +381,7 @@ class VRP(Problem):
         if isinstance(solution, str):
             sol = {}
             for n, var in enumerate(self.docplex_model.iter_binary_vars()):
-                sol[var.name] = round(solution[n])
+                sol[var.name] = int(solution[n])
             solution = sol
         paths_and_subtours = self.paths_subtours(solution)
         paths = paths_and_subtours["paths"]
