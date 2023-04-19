@@ -309,6 +309,11 @@ class VRP(Problem):
         - 'paths': solutions of the VRP,
         - 'subtours': subtours found in the solution
         """
+        if isinstance(sol, str):
+            solution = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                solution[var.name] = int(sol[n])
+            sol = solution
         n_nodes = self.G.number_of_nodes()
         vars_list = []
         for i in range(n_nodes - 1):
