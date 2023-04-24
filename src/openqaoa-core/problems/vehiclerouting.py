@@ -363,6 +363,49 @@ class VRP(Problem):
                     raise ValueError("The subtours in the solution are broken.")
             i += 1
         return {"paths": paths, "subtours": subtours}
+    
+    def get_distance(self, sol):
+        cities = self.G.number_of_nodes()
+        if isinstance(sol, str):
+            solution = {}
+            for n, var in enumerate(self.docplex_model.iter_binary_vars()):
+                solution[var.name] = int(sol[n])
+            sol = solution
+        total_distance = 0
+        for i in range(cities):
+            for j in range(i+1, cities):
+                if sol[f"x_{i}_{j}"]:
+                    total_distance += self.G.edges[i, j]["weight"]
+        return total_distance
+    
+    def has_subtours(self, sol:str):
+        """
+        Check if the TSP solution sol has subtours.
+        sol: string, representing the TSP solution
+        cities: int number of cities
+        mdls: cplex model to get the variables
+        """
+        cities = self.G.number_of_nodes()
+        vars_ = {var.name:n for n, var in enumerate(self.docplex_model.iter_binary_vars())}
+        vars_list = []
+        for i in range(cities-1):
+            for j in range(i+1, cities):
+                if int(sol[vars_[f"x_{i}_{j}"]]):
+                    vars_list.append([i,j])
+        nodes=[0]
+        paths = []
+        while vars_list:
+            n = len(vars_list)
+            for edge in vars_list:
+                if nodes[-1] in edge:
+                    paths.append(edge)
+                    vars_list.remove(edge)
+                    nodes.append(edge[0] if edge[0] != nodes[-1] else edge[1])
+                    break
+            if n == len(vars_list):
+                return True
+        return len(vars_list) != 0 or nodes[-1] != 0
+
 
     def plot_solution(self, solution: Union[dict, str], ax=None, edge_width=4, colors=None):
         """
