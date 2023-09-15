@@ -59,7 +59,6 @@ class ExpectedRouting:
 class TestingQubitRouting(unittest.TestCase):
     @pytest.mark.qpu
     def setUp(self):
-
         # case qubits device > qubits problem (IBM NAIROBI)
         self.IBM_NAIROBI_KNAPSACK = ExpectedRouting(
             qubo=Knapsack.random_instance(n_items=3, seed=20).qubo,
@@ -126,8 +125,8 @@ class TestingQubitRouting(unittest.TestCase):
             final_logical_qubit_order=[5, 4, 0, 1, 2, 3],
         )
 
-        # case qubits problem == 2 (IBM OSLO)
-        self.IBM_OSLO_QUBO2 = ExpectedRouting(
+        # case qubits problem == 2 (IBM perth)
+        self.IBM_perth_QUBO2 = ExpectedRouting(
             qubo=QUBO.from_dict(
                 {
                     "terms": [[0, 1], [1]],
@@ -136,7 +135,7 @@ class TestingQubitRouting(unittest.TestCase):
                 }
             ),
             device_location="ibmq",
-            device_name="ibm_oslo",
+            device_name="ibm_perth",
             qpu_credentials={
                 "hub": "ibm-q",
                 "group": "open",
@@ -151,11 +150,11 @@ class TestingQubitRouting(unittest.TestCase):
             final_logical_qubit_order=[2, 1, 0],
         )
 
-        # case qubits device == qubits problem (IBM OSLO)
-        self.IBM_OSLO_NPARTITION = ExpectedRouting(
+        # case qubits device == qubits problem (IBM perth)
+        self.IBM_perth_NPARTITION = ExpectedRouting(
             qubo=NumberPartition.random_instance(n_numbers=7, seed=2).qubo,
             device_location="ibmq",
-            device_name="ibm_oslo",
+            device_name="ibm_perth",
             qpu_credentials={
                 "hub": "ibm-q",
                 "group": "open",
@@ -379,7 +378,6 @@ class TestingQubitRouting(unittest.TestCase):
 
     @pytest.mark.qpu
     def test_qubit_routing(self):
-
         for i, case in enumerate(self.list_of_cases):
             print("Test case {} out of {}:".format(i + 1, len(self.list_of_cases)))
             self.__compare_results(case, p=i % 4 + 1)

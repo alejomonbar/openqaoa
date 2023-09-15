@@ -15,6 +15,8 @@ from openqaoa.problems import (
     PortfolioOptimization,
     MIS,
     BinPacking,
+    SK,
+    KColor,
 )
 from openqaoa.utilities import convert2serialize
 from openqaoa.problems.helper_functions import create_problem_from_dict
@@ -22,37 +24,60 @@ from openqaoa.problems.helper_functions import create_problem_from_dict
 
 class TestQUBO(unittest.TestCase):
     """Tests for the QUBO class"""
+
     def __generate_random_problems(self):
+        seed = 0
+        rng = np.random.default_rng(seed)
         problems_random_instances = {
-            "tsp": TSP.random_instance(n_cities=randint(2, 15)),
-            "tsp_lp":TSP_LP.random_instance(n_nodes=randint(2, 15)),
+            "tsp": TSP.random_instance(n_cities=int(rng.integers(2, 10)), seed=seed),
+            "tsp_lp": TSP_LP.random_instance(
+                n_nodes=int(rng.integers(2, 10)), seed=seed
+            ),
             "number_partition": NumberPartition.random_instance(
-                n_numbers=randint(2, 15)
+                n_numbers=int(rng.integers(2, 10)), seed=seed
             ),
             "maximum_cut": MaximumCut.random_instance(
-                n_nodes=randint(2, 15), edge_probability=random()
+                n_nodes=int(rng.integers(2, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
-            "knapsack": Knapsack.random_instance(n_items=randint(2, 15)),
+            "knapsack": Knapsack.random_instance(
+                n_items=int(rng.integers(2, 10)), seed=seed
+            ),
             "slack_free_knapsack": SlackFreeKnapsack.random_instance(
-                n_items=randint(2, 15)
+                n_items=int(rng.integers(2, 10)), seed=seed
             ),
             "minimum_vertex_cover": MinimumVertexCover.random_instance(
-                n_nodes=randint(2, 15), edge_probability=random()
+                n_nodes=int(rng.integers(2, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
             "shortest_path": ShortestPath.random_instance(
-                n_nodes=randint(3, 15), edge_probability=random()
+                n_nodes=int(rng.integers(3, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
-            "vehicle_routing": VRP.random_instance(),
+            "vehicle_routing": VRP.random_instance(seed=seed),
             "maximal_independent_set": MIS.random_instance(
-                n_nodes=randint(3, 15), edge_probability=random()
+                n_nodes=int(rng.integers(3, 10)),
+                edge_probability=rng.random(),
+                seed=seed,
             ),
-            "bin_packing": BinPacking.random_instance(),
-            "portfolio_optimization": PortfolioOptimization.random_instance(),
+            "bin_packing": BinPacking.random_instance(seed=seed),
+            "portfolio_optimization": PortfolioOptimization.random_instance(seed=seed),
+            "sherrington_kirkpatrick": SK.random_instance(
+                n_nodes=int(rng.integers(2, 10)), seed=seed
+            ),
+            "k_color": KColor.random_instance(
+                n_nodes=int(rng.integers(3, 8)), k=int(rng.integers(2, 5)), seed=seed
+            ),
         }
         qubo_random_instances = {
             k: v.qubo for k, v in problems_random_instances.items()
         }
-        qubo_random_instances["generic_qubo"] = QUBO.random_instance(randint(2, 15))
+        qubo_random_instances["generic_qubo"] = QUBO.random_instance(
+            int(rng.integers(2, 10)), seed=seed
+        )
         return problems_random_instances, qubo_random_instances
 
     def test_problem_instance(self):
@@ -71,8 +96,8 @@ class TestQUBO(unittest.TestCase):
             "tsp_lp": [
                 "problem_type",
                 "G",
-                "pos",
                 "n_vehicles",
+                "pos",
                 "depot",
                 "subtours",
                 "method",
@@ -101,8 +126,8 @@ class TestQUBO(unittest.TestCase):
             "vehicle_routing": [
                 "problem_type",
                 "G",
-                "pos",
                 "n_vehicles",
+                "pos",
                 "depot",
                 "subtours",
                 "method",
@@ -130,6 +155,8 @@ class TestQUBO(unittest.TestCase):
                 "num_assets",
                 "budget",
             ],
+            "sherrington_kirkpatrick": ["problem_type", "G"],
+            "k_color": ["problem_type", "G", "k", "penalty"],
             "generic_qubo": ["problem_type"],
         }
 
@@ -197,6 +224,7 @@ class TestQUBO(unittest.TestCase):
                         ), "QUBO from dict method is not correct for problem type {}".format(
                             qubo.problem_instance["problem_type"]
                         )
+
     def test_qubo_terms_and_weight_same_size(self):
         """
         Test that creating a QUBO problem with invalid terms and weights

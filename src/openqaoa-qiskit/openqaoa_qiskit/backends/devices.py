@@ -132,7 +132,7 @@ class DeviceQiskit(DeviceBase):
             print(
                 "An Exception has occured when trying to connect with the provider."
                 "Please note that you are required to set up your IBMQ account locally first."
-                "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq"
+                "See: https://quantum-computing.ibm.com/lab/docs/iql/manage/account/ibmq "
                 "for how to save your IBMQ account locally. \n {}".format(e)
             )
             return False
